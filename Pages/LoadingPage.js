@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { View, Image, Animated, StyleSheet } from "react-native";
 
-export default function Acceuille() {
+export default function LoadingPage() {
   const rotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
