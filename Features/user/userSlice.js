@@ -34,11 +34,35 @@ const initialState = {
   isLoading: false,
   user: null,
   googleUser: null,
+  error: null,
   isFinalUser: false,
   isGoogleLogin: false,
   profile: null,
 };
 
+// add user
+export const signUpUser = createAsyncThunk(
+  "user/signUpUser",
+  async (user, thunkAPI) => {
+    try {
+      const resp = await customFetch.post(
+        "/api/v1/utilisateur/addUtilisateur",
+        user
+      );
+      console.log("Réponse API signup :", resp.data);
+      return resp.data;
+    } catch (error) {
+      console.error(
+        "Erreur API signup :",
+        error.response?.data || error.message
+      );
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message ||
+          "Un utilisateur avec cet email existe déjà."
+      );
+    }
+  }
+);
 // LOGIN classique
 export const loginUser = createAsyncThunk(
   "user/loginUser",
@@ -51,23 +75,6 @@ export const loginUser = createAsyncThunk(
       console.error("Erreur API login:", error.response?.data || error.message);
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Erreur login"
-      );
-    }
-  }
-);
-
-// USER via Google
-export const fetchUserByGoogle = createAsyncThunk(
-  "user/fetchUserByGoogle",
-  async (_, thunkAPI) => {
-    try {
-      const resp = await customFetch.get("/googleStuff/user-info", {
-        withCredentials: true,
-      });
-      return resp.data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.msg || "Erreur Google login"
       );
     }
   }
@@ -101,6 +108,7 @@ export const fetchUser = createAsyncThunk(
 const userSlice = createSlice({
   name: "user",
   initialState,
+  error: null,
   reducers: {
     logoutUser: (state) => {
       state.user = null;
@@ -138,16 +146,18 @@ const userSlice = createSlice({
         state.isLoading = false;
         console.error("Erreur de login :", action.payload);
       })
-      .addCase(fetchUserByGoogle.pending, (state) => {
+      .addCase(signUpUser.pending, (state) => {
         state.isLoading = true;
       })
-      .addCase(fetchUserByGoogle.fulfilled, (state, { payload }) => {
+      .addCase(signUpUser.fulfilled, (state, { payload }) => {
         state.isLoading = false;
-        state.user = payload;
+        console.log("Inscription réussie :", payload);
+        // Ici tu peux rediriger ou afficher un message de succès
       })
-      .addCase(fetchUserByGoogle.rejected, (state, action) => {
+      .addCase(signUpUser.rejected, (state, action) => {
         state.isLoading = false;
-        console.error("Erreur fetch user Google :", action.payload);
+        console.error("Erreur lors de l'inscription :", action.payload);
+        state.error = action.payload;
       });
   },
 });

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { PageOneQuestionnaire, PageTwoQuestionnaire } from "../Components";
+import { useDispatch } from "react-redux";
+import { signUpUser } from "../Features/user/userSlice";
 
 // Dots de pagination stylés
 const PaginationDots = ({ totalSteps, currentStep }) => {
@@ -25,13 +27,42 @@ const PaginationDots = ({ totalSteps, currentStep }) => {
 
 const QuestionnaireSignUP = () => {
   const [step, setStep] = useState(1);
+  const dispatch = useDispatch(); // Pour envoyer les données au back-end
+
+  const [formData, setFormData] = useState({
+    prenom: "",
+    nom: "",
+    email: "",
+    motDePasse: "",
+    confirmPassword: "",
+    telephone: "",
+    genre: "",
+    dateNaissance: "",
+    typeUtilisateur: "PRESTATAIRE",
+  });
+
+  const handleSubmit = () => {
+    dispatch(signUpUser(formData));
+  };
 
   const renderStep = () => {
     switch (step) {
       case 1:
-        return <PageOneQuestionnaire />;
+        return (
+          <PageOneQuestionnaire
+            formData={formData}
+            setFormData={setFormData}
+            setStep={setStep}
+          />
+        );
       case 2:
-        return <PageTwoQuestionnaire />;
+        return (
+          <PageTwoQuestionnaire
+            formData={formData}
+            setFormData={setFormData}
+            handleSubmit={handleSubmit}
+          />
+        );
       default:
         return <Text style={{ textAlign: "center" }}>Formulaire terminé</Text>;
     }
@@ -41,31 +72,9 @@ const QuestionnaireSignUP = () => {
     <View style={styles.container}>
       <Text style={styles.logo}>ServiGo</Text>
 
-      <PaginationDots totalSteps={9} currentStep={step} />
+      <PaginationDots totalSteps={2} currentStep={step} />
 
-      <View style={styles.formContainer}>
-        {/* Flèche retour en haut à gauche */}
-        {step > 1 && (
-          <TouchableOpacity
-            onPress={() => setStep(step - 1)}
-            style={styles.backArrow}
-          >
-            <Text style={styles.arrowText}>←</Text>
-          </TouchableOpacity>
-        )}
-
-        {renderStep()}
-
-        {/* Bouton Suivant en bas */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => {
-            if (step < 9) setStep(step + 1);
-          }}
-        >
-          <Text style={styles.buttonText}>Suivant</Text>
-        </TouchableOpacity>
-      </View>
+      <View style={styles.formContainer}>{renderStep()}</View>
     </View>
   );
 };
@@ -92,28 +101,6 @@ const styles = StyleSheet.create({
     padding: 20,
     marginTop: 30,
     position: "relative",
-  },
-  backArrow: {
-    position: "absolute",
-    top: 15,
-    left: 15,
-    zIndex: 10,
-    padding: 5,
-  },
-  arrowText: {
-    fontSize: 24,
-    color: "#7C00FF",
-  },
-  button: {
-    backgroundColor: "#7C00FF",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 30,
-  },
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
-    fontWeight: "bold",
   },
 });
 
