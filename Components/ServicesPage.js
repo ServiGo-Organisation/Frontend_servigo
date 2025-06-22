@@ -1,17 +1,61 @@
 import React, { useState } from "react";
-import { View, Text, Image, TextInput, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 const services = [
-  { id: "1", title: "Plombier", image: require("../assets/images/plombier.jpg") },
-  { id: "2", title: "Électricien", image: require("../assets/images/electricien.jpg") },
-  { id: "3", title: "Menuisier", image: require("../assets/images/menuisier.jpeg") },
-  { id: "4", title: "Peintre", image: require("../assets/images/peintre.webp") },
-  { id: "5", title: "Femme de ménage", image: require("../assets/images/menage.jpg") },
-  { id: "6", title: "Jardinier", image: require("../assets/images/jardinier.jpg") },
+  {
+    id: "1",
+    title: "Plombier",
+    image: require("../assets/images/plombier.jpg"),
+  },
+  {
+    id: "2",
+    title: "Électricien",
+    image: require("../assets/images/electricien.jpg"),
+  },
+  {
+    id: "3",
+    title: "Menuisier",
+    image: require("../assets/images/menuisier.jpeg"),
+  },
+  {
+    id: "4",
+    title: "Peintre",
+    image: require("../assets/images/peintre.webp"),
+  },
+  {
+    id: "5",
+    title: "Femme de ménage",
+    image: require("../assets/images/menage.jpg"),
+  },
+  {
+    id: "6",
+    title: "Jardinier",
+    image: require("../assets/images/jardinier.jpg"),
+  },
   { id: "7", title: "Vitrier", image: require("../assets/images/vitrier.jpg") },
-  { id: "8", title: "Cours particuliers", image: require("../assets/images/professeur.png") },
-  { id: "9", title: "Coiffeur à domicile", image: require("../assets/images/coiffeur.jpg") },
-  { id: "10", title: "Coach sportif", image: require("../assets/images/coach.jpg") },
+  {
+    id: "8",
+    title: "Cours particuliers",
+    image: require("../assets/images/professeur.png"),
+  },
+  {
+    id: "9",
+    title: "Coiffeur à domicile",
+    image: require("../assets/images/coiffeur.jpg"),
+  },
+  {
+    id: "10",
+    title: "Coach sportif",
+    image: require("../assets/images/coach.jpg"),
+  },
 ];
 
 const ServicesPage = () => {
@@ -29,12 +73,18 @@ const ServicesPage = () => {
 
       {/* Icône supplémentaire à droite de l'icône du sidebar */}
       <TouchableOpacity style={styles.rightIconButton}>
-        <Image source={require("../assets/images/sg.png")} style={styles.rightIcon} />
+        <Image
+          source={require("../assets/images/sg.png")}
+          style={styles.rightIcon}
+        />
       </TouchableOpacity>
 
       {/* Icône de photo de profil à droite de l'icône SG */}
       <TouchableOpacity style={styles.profileIconButton}>
-        <Image source={require("../assets/images/user.png")} style={styles.profileIcon} />
+        <Image
+          source={require("../assets/images/user.png")}
+          style={styles.profileIcon}
+        />
       </TouchableOpacity>
 
       {/* Contenu principal */}
@@ -43,7 +93,9 @@ const ServicesPage = () => {
         <Text style={styles.title}>Salam !</Text>
         <Text style={styles.title}>Salma Hamidallah</Text>
 
-        <Text style={styles.subtitle}>Besoin de services chez vous sans sortir ?</Text>
+        <Text style={styles.subtitle}>
+          Besoin de services chez vous sans sortir ?
+        </Text>
 
         {/* Barre de recherche */}
         <View style={styles.searchContainer}>
@@ -116,15 +168,15 @@ const styles = StyleSheet.create({
     height: 40,
     resizeMode: "contain",
   },
- profileIcon: {
-   width: 40,
-   height: 40,
-   borderRadius: 20,
-   resizeMode: "cover",
-   borderWidth: 2,
-   borderColor: "#6200ea",
-   backgroundColor: "#fff", // Vous pouvez également ajouter une couleur de fond, si vous le souhaitez
- },
+  profileIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    resizeMode: "cover",
+    borderWidth: 2,
+    borderColor: "#6200ea",
+    backgroundColor: "#fff", // Vous pouvez également ajouter une couleur de fond, si vous le souhaitez
+  },
   contentContainer: {
     flex: 1,
     paddingTop: 90,

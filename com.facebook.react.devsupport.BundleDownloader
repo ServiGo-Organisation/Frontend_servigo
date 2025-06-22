@@ -1,0 +1,118 @@
+Chapitre 2 : Contexte général du projet
+1. Introduction
+Dans tout projet informatique, la spécification technique constitue une étape clé pour comprendre les besoins et garantir une bonne exécution du projet. Ce chapitre présente d'abord le contexte général du projet en exposant la problématique, les objectifs, ainsi que les besoins fonctionnels et non fonctionnels. Ensuite, la méthodologie de travail et la planification seront présentées.
+
+2. Contexte du projet
+a. Problématique
+La gestion sécurisée des logs bancaires, la supervision des serveurs Unix et la génération d'alertes fiables sont devenues essentielles pour assurer la conformité et la continuité des opérations dans les systèmes financiers.
+
+Face à cela, les défis rencontrés sont multiples :
+
+L'archivage manuel et dispersé des logs, souvent sujet aux erreurs.
+
+La difficulté de surveiller en temps réel l’état des serveurs et bases de données.
+
+L'absence d'outils centralisés pour la génération automatique de rapports d'activité ou d'anomalie.
+
+La solution doit donc permettre une centralisation, une automatisation et une sécurisation de ces processus.
+
+b. Objectif de l’application
+Le projet vise à développer une application composée :
+
+D'un backend (Spring Boot) gérant l’archivage, la supervision, les alertes et le reporting​
+.
+
+D'un frontend (React.js) fournissant une interface web ergonomique pour la configuration, la supervision et la visualisation​
+.
+
+Les objectifs principaux sont :
+
+Assurer l'archivage automatique et sécurisé des logs bancaires.
+
+Superviser en temps réel les serveurs Unix et bases de données.
+
+Générer automatiquement des rapports d’activité et déclencher des alertes en cas d'anomalies.
+
+Offrir une interface utilisateur intuitive pour tous les utilisateurs.
+
+c. Besoins fonctionnels
+Archivage des logs :
+
+Configurer la fréquence et la rétention des archivages​
+.
+
+Exécuter automatiquement des scripts d’archivage via des connexions SSH​
+.
+
+Supervision :
+
+Afficher en temps réel les métriques des serveurs et bases de données​
+.
+
+Alerting :
+
+Générer et notifier les alertes (email, SMS) en cas d’échecs ou d’anomalies​
+.
+
+Reporting :
+
+Générer des rapports PDF/CSV sur les activités, les performances et les erreurs​
+.
+
+Interface utilisateur :
+
+Permettre aux utilisateurs de configurer, consulter les données, et télécharger les rapports via une application React​
+​
+.
+
+d. Besoins non fonctionnels
+Performance :
+
+Traitement rapide des requêtes et supervision en temps réel​
+.
+
+Sécurité :
+
+Authentification sécurisée (JWT, OAuth2), chiffrement des données​
+.
+
+Fiabilité :
+
+Application stable, hautement disponible.
+
+Compatibilité :
+
+Interface responsive sur desktop, tablette et mobile​
+.
+
+Évolutivité :
+
+Architecture modulaire permettant l’ajout de nouvelles fonctionnalités (ex : support Cloud)​
+.
+
+Facilité d'utilisation :
+
+Dashboard clair avec visualisation par graphiques et filtres dynamiques​
+.
+
+3. Planification du projet
+Le projet est planifié en plusieurs étapes principales :
+
+Initialisation et définition de l'architecture technique.
+
+Développement du backend (APIs REST sécurisées).
+
+Développement du frontend (interface web responsive).
+
+Intégration de la supervision et du reporting.
+
+Test et validation.
+
+Déploiement final.
+
+(Ici tu peux insérer un diagramme de Gantt comme l’a fait ton ami — je peux t'aider à en créer un si tu veux !)
+
+4. Conclusion
+Ce chapitre a mis en lumière les défis techniques liés à la gestion sécurisée des logs bancaires et la nécessité d'une supervision en temps réel des systèmes.
+La solution proposée, basée sur une architecture robuste Spring Boot/React.js, répond à ces défis en assurant la sécurité, la fiabilité et la facilité d'utilisation.
+La planification structurée garantit une progression méthodique pour mener à bien ce projet, avec la perspective d'une évolution continue pour répondre à de futurs besoins.

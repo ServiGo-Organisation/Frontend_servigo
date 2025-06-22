@@ -30,7 +30,7 @@ export default function App() {
 
   return (
     <Provider store={store}>
-      <NavigationContainer>
+      <NavigationContainer style={styles.xxxx}>
         {/* Met à jour le style de la barre d'état ici */}
         <StatusBar style="auto" />
         {loading ? (

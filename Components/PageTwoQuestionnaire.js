@@ -8,66 +8,71 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useSelector } from "react-redux"; // pour récupérer l'erreur Redux
+import * as ImagePicker from "expo-image-picker";
 
-const PageTwoQuestionnaire = ({ formData, setFormData, handleSubmit }) => {
+const PageTwoQuestionnaire = ({ formData, setFormData, setStep }) => {
   const [errors, setErrors] = useState({});
-  const { error } = useSelector((state) => state.user); // erreur globale
-
-  useEffect(() => {
-    if (error) {
-      // Vérifie si error est un objet et contient une réponse avec un message
-      const errorMessage =
-        error || formData.response?.data || "Erreur inconnue";
-
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        email: errorMessage, // Ajoute le message d'erreur pour le champ email
-      }));
-    }
-  }, [error]);
 
   const validateForm = () => {
     const newErrors = {};
-
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+
     if (!formData.email || !emailRegex.test(formData.email)) {
       newErrors.email = "Veuillez entrer un email valide.";
     }
-
     if (!formData.motDePasse || formData.motDePasse.length < 6) {
       newErrors.motDePasse =
         "Le mot de passe doit contenir au moins 6 caractères.";
     }
-
     if (formData.motDePasse !== formData.confirmPassword) {
       newErrors.confirmPassword = "Les mots de passe ne correspondent pas.";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFormSubmit = () => {
-    if (validateForm()) {
-      handleSubmit();
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      setFormData((prev) => ({ ...prev, photoUri: uri }));
     }
   };
 
-  const isPasswordMismatch =
-    formData.motDePasse !== formData.confirmPassword || !formData.motDePasse;
+  const handleNext = () => {
+    if (validateForm()) {
+      setStep(3); // passe à la page 3 sans faire d'appel API
+    }
+  };
 
   return (
     <View>
       <View style={styles.center}>
-        <Image
-          source={require("../assets/images/ServiGOLogoWhite.png")}
-          style={styles.logo}
-        />
+        <View style={styles.container}>
+          <View style={styles.avatar}>
+            {formData.photoUri ? (
+              <Image
+                source={{ uri: formData.photoUri }}
+                style={{ width: 90, height: 90, borderRadius: 45 }}
+              />
+            ) : (
+              <Ionicons name="person" size={40} color="#fff" />
+            )}
+          </View>
+
+          <TouchableOpacity style={styles.addButton} onPress={handlePickImage}>
+            <Ionicons name="add" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.title}>Infos de base</Text>
       </View>
 
-      {/* Email input */}
       <View style={[styles.inputBox, errors.email && styles.inputBoxError]}>
         <Ionicons name="mail-outline" size={20} color="#7C00FF" />
         <TextInput
@@ -80,7 +85,6 @@ const PageTwoQuestionnaire = ({ formData, setFormData, handleSubmit }) => {
       </View>
       {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
-      {/* Password input */}
       <View
         style={[styles.inputBox, errors.motDePasse && styles.inputBoxError]}
       >
@@ -99,7 +103,6 @@ const PageTwoQuestionnaire = ({ formData, setFormData, handleSubmit }) => {
         <Text style={styles.errorText}>{errors.motDePasse}</Text>
       )}
 
-      {/* Confirm Password input */}
       <View
         style={[
           styles.inputBox,
@@ -121,24 +124,8 @@ const PageTwoQuestionnaire = ({ formData, setFormData, handleSubmit }) => {
         <Text style={styles.errorText}>{errors.confirmPassword}</Text>
       )}
 
-      {/* Bottom Image */}
-      <View style={styles.imageBottomLogo}>
-        <Image
-          source={require("../assets/images/InfobaseImage.jpg")}
-          style={{ width: 180, height: 120 }}
-        />
-      </View>
-
-      {/* Confirmation Button */}
-      <TouchableOpacity
-        style={[
-          styles.confirmButton,
-          isPasswordMismatch && styles.disabledButton,
-        ]}
-        onPress={handleFormSubmit}
-        disabled={isPasswordMismatch}
-      >
-        <Text style={styles.buttonText}>Confirmer</Text>
+      <TouchableOpacity style={styles.confirmButton} onPress={handleNext}>
+        <Text style={styles.buttonText}>Suivant</Text>
       </TouchableOpacity>
     </View>
   );
@@ -151,11 +138,33 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  logo: {
-    width: 80,
-    height: 80,
-    marginBottom: 10,
-    borderRadius: 100,
+  container: {
+    width: 100,
+    height: 100,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatar: {
+    backgroundColor: "#7C00FF",
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  addButton: {
+    backgroundColor: "#7C00FF",
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   title: {
     fontWeight: "bold",
@@ -186,17 +195,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  disabledButton: {
-    backgroundColor: "#cccccc",
-  },
   buttonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
-  },
-  imageBottomLogo: {
-    justifyContent: "center",
-    alignItems: "center",
   },
   errorText: {
     color: "red",

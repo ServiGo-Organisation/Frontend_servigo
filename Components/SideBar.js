@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -10,15 +10,17 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useSelector, useDispatch } from "react-redux";
-// Si vous avez une action logout dans votre Redux store
-// import { logout } from '../Features/auth/authSlice';
+import { fetchUser } from "../Features/user/userSlice";
 
 const Sidebar = ({ onClose }) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
-  // Récupérer les données utilisateur depuis Redux
-  const { user } = useSelector((state) => state.user);
+  const { userInfos } = useSelector((state) => state.user);
+
+  useEffect(() => {
+    dispatch(fetchUser());
+  }, [dispatch]);
 
   const menuItems = [
     { id: 1, title: "Acceuille", icon: "home", route: "Home" },
@@ -47,23 +49,43 @@ const Sidebar = ({ onClose }) => {
 
   const handleLogout = () => {
     if (onClose) onClose();
-    // Si vous avez une action logout
-    // dispatch(logout());
     navigation.replace("Login");
+  };
+
+  // Fonction pour récupérer les initiales
+  const getInitials = () => {
+    if (userInfos?.nom && userInfos?.prenom) {
+      return userInfos.nom[0].toUpperCase() + userInfos.prenom[0].toUpperCase();
+    } else if (userInfos?.nom) {
+      return userInfos.nom[0].toUpperCase();
+    }
+    return "U";
   };
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
-        {/* Header avec profil utilisateur */}
+        {/* Header profil utilisateur */}
         <View style={styles.profileContainer}>
           <View style={styles.profileImage}>
-            <Text style={styles.profileInitial}>
-              {user?.nom ? user.nom[0] : "U"}
-            </Text>
+            {userInfos?.userImages ? (
+              <Image
+                source={{ uri: userInfos.userImage }}
+                style={styles.profilePhoto}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={styles.profileInitial}>{getInitials()}</Text>
+            )}
           </View>
-          <Text style={styles.profileName}>{user?.nom || "Utilisateur"}</Text>
-          <Text style={styles.profileRole}>{user?.role || "Client"}</Text>
+          <Text style={styles.profileName}>
+            {userInfos?.nom && userInfos?.prenom
+              ? `${userInfos.nom} ${userInfos.prenom}`
+              : "Utilisateur"}
+          </Text>
+          <Text style={styles.profileRole}>
+            {userInfos?.typeUtilisateur?.toLowerCase() || "visiteur"}
+          </Text>
         </View>
 
         {/* Menu items */}
@@ -85,7 +107,7 @@ const Sidebar = ({ onClose }) => {
           ))}
         </View>
 
-        {/* Footer items */}
+        {/* Footer */}
         <View style={styles.footerContainer}>
           <TouchableOpacity
             style={styles.footerItem}
@@ -133,6 +155,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
+    overflow: "hidden",
+  },
+  profilePhoto: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 30,
   },
   profileInitial: {
     color: "#fff",

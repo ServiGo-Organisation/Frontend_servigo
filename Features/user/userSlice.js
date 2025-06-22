@@ -3,7 +3,7 @@ import customFetch from "../../utils/axios";
 import { jwtDecode } from "jwt-decode";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Fonctions de gestion AsyncStorage
+// === Fonctions de gestion AsyncStorage ===
 export const addUserToStorage = async (user) => {
   try {
     await AsyncStorage.setItem("user", JSON.stringify(user));
@@ -30,46 +30,67 @@ export const getUserFromStorage = async () => {
   }
 };
 
+// === État initial ===
 const initialState = {
   isLoading: false,
   user: null,
+  userInfos: null,
   googleUser: null,
   error: null,
   isFinalUser: false,
   isGoogleLogin: false,
   profile: null,
+  // uploadedPhoto: null,
 };
 
-// add user
+// SIGN UP
 export const signUpUser = createAsyncThunk(
   "user/signUpUser",
-  async (user, thunkAPI) => {
+  async ({ user, imageUri }, thunkAPI) => {
     try {
+      const formData = new FormData();
+
+      // Ajouter le JSON utilisateur en string
+      formData.append("utilisateur", JSON.stringify(user));
+
+      // Ajouter l'image si elle existe
+      if (imageUri) {
+        const filename = imageUri.split("/").pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+
+        formData.append("userImage", {
+          uri: imageUri,
+          name: filename,
+          type,
+        });
+      }
+
       const resp = await customFetch.post(
         "/api/v1/utilisateur/addUtilisateur",
-        user
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      console.log("Réponse API signup :", resp.data);
+
       return resp.data;
     } catch (error) {
-      console.error(
-        "Erreur API signup :",
-        error.response?.data || error.message
-      );
       return thunkAPI.rejectWithValue(
-        error.response?.data?.message ||
-          "Un utilisateur avec cet email existe déjà."
+        error.response?.data || "Erreur lors de l'inscription"
       );
     }
   }
 );
-// LOGIN classique
+
+// LOGIN
 export const loginUser = createAsyncThunk(
   "user/loginUser",
   async (user, thunkAPI) => {
     try {
       const resp = await customFetch.post("/auth/login", user);
-      console.log(resp.data);
       return resp.data;
     } catch (error) {
       console.error("Erreur API login:", error.response?.data || error.message);
@@ -80,22 +101,29 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// FETCH user (à modifier selon logique)
+// FETCH USER INFOS
 export const fetchUser = createAsyncThunk(
   "user/fetchUser",
   async (_, thunkAPI) => {
-    const storedUser = await getUserFromStorage();
-    const userId = storedUser?.userId;
-
-    if (!userId) {
-      return thunkAPI.rejectWithValue("User ID introuvable");
-    }
-
     try {
-      const resp = await customFetch.get("/api/v1/utilisateur/user-info", {
-        params: { userId },
-        withCredentials: true,
-      });
+      const storedUser = await getUserFromStorage(); // Récupérer l'utilisateur depuis AsyncStorage
+      const userId = storedUser?.userId;
+      const accessToken = storedUser?.accessToken; // Récupérer le token d'accès
+
+      if (!userId || !accessToken) {
+        return thunkAPI.rejectWithValue("User ID ou Access Token introuvable");
+      }
+      // Ajout du header Authorization avec le Bearer Token
+      const resp = await customFetch.get(
+        `/api/v1/utilisateur/user-info?idUtilisateur=${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // Utilisation de l'Access Token pour l'authentification
+          },
+          withCredentials: true, // Inclure les cookies si nécessaire
+        }
+      );
+
       return resp.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -105,14 +133,54 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
+// export const uploadImage = createAsyncThunk(
+//   "user/uploadImage",
+//   async (fileUri, thunkAPI) => {
+//     try {
+//       const formData = new FormData();
+
+//       // Assure-toi que l'uri commence par file://
+//       const uri = fileUri.startsWith("file://") ? fileUri : `file://${fileUri}`;
+
+//       formData.append("file", {
+//         uri,
+//         name: "photo.jpg",
+//         type: "image/jpeg",
+//       });
+
+//       const resp = await customFetch.post(
+//         "/api/v1/utilisateur/uploadPhoto",
+//         formData,
+//         {
+//           headers: {
+//             "Content-Type": "multipart/form-data",
+//           },
+//         }
+//       );
+
+//       return resp.data; // Nom du fichier retourné par le backend
+//     } catch (error) {
+//       console.error(
+//         "Erreur API upload :",
+//         error.response?.data || error.message
+//       );
+//       return thunkAPI.rejectWithValue(
+//         error.response?.data?.message || "Erreur upload"
+//       );
+//     }
+//   }
+// );
+
+// === Slice utilisateur ===
 const userSlice = createSlice({
   name: "user",
   initialState,
-  error: null,
   reducers: {
     logoutUser: (state) => {
       state.user = null;
-      removeUserFromStorage(); // Nettoyage AsyncStorage
+      state.userInfos = null;
+      state.isFinalUser = false;
+      removeUserFromStorage();
     },
     setGoogleLogin: (state) => {
       state.isGoogleLogin = true;
@@ -120,9 +188,13 @@ const userSlice = createSlice({
     setNormalLogin: (state) => {
       state.isGoogleLogin = false;
     },
+    resetError: (state) => {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
+      // LOGIN
       .addCase(loginUser.pending, (state) => {
         state.isLoading = true;
       })
@@ -138,29 +210,65 @@ const userSlice = createSlice({
 
         state.isLoading = false;
         state.user = user;
+        state.isFinalUser = Array.isArray(user.roles)
+          ? user.roles.includes("USER")
+          : String(user.roles).includes("USER");
+
         addUserToStorage(user);
-        state.isFinalUser = user.roles.includes("USER");
         console.log(`Connexion réussie : ${user.nom}`);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
+        state.error = action.payload;
         console.error("Erreur de login :", action.payload);
       })
+
+      // SIGNUP
       .addCase(signUpUser.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(signUpUser.fulfilled, (state, { payload }) => {
         state.isLoading = false;
         console.log("Inscription réussie :", payload);
-        // Ici tu peux rediriger ou afficher un message de succès
       })
       .addCase(signUpUser.rejected, (state, action) => {
         state.isLoading = false;
-        console.error("Erreur lors de l'inscription :", action.payload);
         state.error = action.payload;
+        console.error("Erreur lors de l'inscription :", action.payload);
+      })
+      .addCase(fetchUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = false;
+        state.message = "";
+      })
+      .addCase(fetchUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.userInfos = action.payload;
+        state.isFinalUser =
+          action.payload.typeUtilisateur === "PRESTATEUR_CLIENT";
+      })
+      .addCase(fetchUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = true;
+        state.message = action.payload || "Erreur inconnue";
+        console.log("rejcted");
       });
+    // .addCase(uploadImage.pending, (state) => {
+    //   state.isLoading = true;
+    //   state.error = null;
+    // })
+    // .addCase(uploadImage.fulfilled, (state, action) => {
+    //   state.isLoading = false;
+    //   // state.uploadedPhoto = action.payload; // nom de fichier
+    // })
+    // .addCase(uploadImage.rejected, (state, action) => {
+    //   state.isLoading = false;
+    //   state.error = action.payload;
+    // });
   },
 });
 
-export const { logoutUser, setGoogleLogin, setNormalLogin } = userSlice.actions;
+export const { logoutUser, setGoogleLogin, setNormalLogin, resetError } =
+  userSlice.actions;
+
 export default userSlice.reducer;

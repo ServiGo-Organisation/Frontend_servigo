@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { LinearGradient } from 'expo-linear-gradient';
-
+import { LinearGradient } from "expo-linear-gradient";
 import {
   View,
   Text,
@@ -9,62 +8,73 @@ import {
   SafeAreaView,
   Image,
   TextInput,
-  ScrollView
+  ScrollView,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUser } from "../Features/user/userSlice";
 import { SideBar } from "../Components";
+import { getAllServices } from "../Features/services/servicesSlice";
+import { url } from "../utils/axios";
 
-const services = [
-  { id: "1", title: "Plombier", image: require("../assets/images/plombier.jpg") },
-  { id: "2", title: "Électricien", image: require("../assets/images/electricien.jpg") },
-  { id: "3", title: "Menuisier", image: require("../assets/images/menuisier.jpeg") },
-  { id: "4", title: "Peintre", image: require("../assets/images/peintre.webp") },
-  { id: "5", title: "Femme de ménage", image: require("../assets/images/menage.jpg") },
-  { id: "6", title: "Jardinier", image: require("../assets/images/jardinier.jpg") },
-  { id: "7", title: "Vitrier", image: require("../assets/images/menuisier.jpeg") },
-  { id: "8", title: "Cours particuliers", image: require("../assets/images/professeur.png") },
-  { id: "9", title: "Coiffeur à domicile", image: require("../assets/images/coiffeur.jpg") },
-  { id: "10", title: "Coach sportif", image: require("../assets/images/coach.jpg") },
-];
 const Dashboard = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const navigation = useNavigation();
   const dispatch = useDispatch();
 
-  const { user, isLoading, isFinalUser } = useSelector((state) => state.user);
+  const { userInfos, isLoading, isFinalUser } = useSelector(
+    (state) => state.user
+  );
+  const { services } = useSelector((state) => state.services);
+  console.log(userInfos);
 
   useEffect(() => {
-    if (!user) {
-      dispatch(fetchUser());
-    }
-  }, [user, dispatch]);
+    dispatch(fetchUser());
+    dispatch(getAllServices());
+  }, [dispatch]);
 
   const toggleSidebar = () => {
     setSidebarVisible(!sidebarVisible);
   };
 
+  const getInitials = () => {
+    if (userInfos?.nom && userInfos?.prenom) {
+      return userInfos.nom[0].toUpperCase() + userInfos.prenom[0].toUpperCase();
+    }
+    return "U";
+  };
+  console.log(
+    url +
+      "/assets/servicesImages/3f0567ef-e9b5-4e9f-8798-4018a2ccf764_plombier.jpg"
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header avec menu et icônes */}
+        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.menuButton} onPress={toggleSidebar}>
             <Ionicons name="menu" size={30} color="#6200ea" />
           </TouchableOpacity>
-
           <TouchableOpacity style={styles.rightIconButton}>
-            <Image source={require("../assets/images/sg.png")} style={styles.rightIcon} />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.profileIconButton}>
             <Image
-              source={user?.photo ? { uri: user.photo } : require("../assets/images/coach.jpg")}
-              style={styles.profileIcon}
+              source={require("../assets/images/sg.png")}
+              style={styles.rightIcon}
             />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.profileIconButton}>
+            <View style={styles.profileIcon}>
+              {userInfos?.userImage ? (
+                <Image
+                  source={{ uri: userInfos.userImage }}
+                  style={styles.profilePhoto}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.profileInitialBackground}>
+                  <Text style={styles.profileInitial}>{getInitials()}</Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -81,16 +91,24 @@ const Dashboard = () => {
           </View>
         )}
 
-        {/* Contenu principal */}
+        {/* Contenu */}
         <ScrollView style={styles.content}>
-          {/* Section Bienvenue */}
           <View style={styles.welcomeSection}>
             {isLoading ? (
               <Text style={styles.text}>Chargement...</Text>
             ) : (
               <>
-                <Text style={styles.greeting}>Salam !</Text>
-                <Text style={styles.userName}>{user?.nom || "Utilisateur"}</Text>
+                <Text style={styles.greeting}>
+                  Bonjour {userInfos?.genre === "Male" ? "Mr" : "Mme"}
+                </Text>
+                <Text style={styles.userName}>
+                  {userInfos?.nom && userInfos?.prenom
+                    ? `${userInfos.nom} ${userInfos.prenom}`
+                    : "Utilisateur"}
+                </Text>
+                <Text style={styles.subtitle}>
+                  Besoin de services chez vous sans sortir ?
+                </Text>
                 {isFinalUser && (
                   <Text style={styles.userRole}>Utilisateur final</Text>
                 )}
@@ -110,23 +128,32 @@ const Dashboard = () => {
             </View>
           </View>
 
-          {/* Section Services */}
+          {/* Section dynamique des services */}
           <Text style={styles.sectionTitle}>Nos Services</Text>
           <View style={styles.servicesGrid}>
-            {services.map((service) => (
-             <TouchableOpacity key={service.id} style={styles.serviceCard}>
-               <Image source={service.image} style={styles.serviceImage} />
-               <LinearGradient
-                 colors={['transparent', 'rgba(0,0,0,0.8)']}
-                 style={styles.serviceTextOverlay}
-                 start={{ x: 0, y: 0 }}
-                 end={{ x: 0, y: 1 }}
-               >
-                 <Text style={styles.serviceTitle}>{service.title}</Text>
-                 <Text style={styles.serviceLink}>Voir plus →</Text>
-               </LinearGradient>
-             </TouchableOpacity>
-            ))}
+            {services.length > 0 ? (
+              services.map((service) => (
+                <TouchableOpacity key={service.id} style={styles.serviceCard}>
+                  <Image
+                    source={{
+                      uri: `${url}/assets/servicesImages/${service.serviceImage}`,
+                    }}
+                    style={styles.serviceImage}
+                  />
+                  <LinearGradient
+                    colors={["transparent", "rgba(0,0,0,0.8)"]}
+                    style={styles.serviceTextOverlay}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                  >
+                    <Text style={styles.serviceTitle}>{service.nom}</Text>
+                    <Text style={styles.serviceLink}>Voir plus →</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text>Aucun service disponible.</Text>
+            )}
           </View>
         </ScrollView>
       </View>
@@ -168,6 +195,26 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 2,
     borderColor: "#6200ea",
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  profilePhoto: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 20,
+  },
+  profileInitialBackground: {
+    backgroundColor: "#8a47fa",
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  profileInitial: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
   },
   sidebarWrapper: {
     position: "absolute",
@@ -208,6 +255,11 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 2,
   },
+  subtitle: {
+    fontSize: 16,
+    color: "#444",
+    marginTop: 10,
+  },
   searchContainer: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -244,47 +296,47 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 20,
   },
-serviceCard: {
-  width: "48%",
-  backgroundColor: "#fff",
-  marginBottom: 15,
-  borderRadius: 10,
-  overflow: "hidden",
-  elevation: 3,
-  position: "relative", // Ajoutez ceci
-},
+  serviceCard: {
+    width: "48%",
+    backgroundColor: "#fff",
+    marginBottom: 15,
+    borderRadius: 10,
+    overflow: "hidden",
+    elevation: 3,
+    position: "relative",
+  },
   serviceImage: {
     width: "100%",
     height: 120,
   },
-serviceTextOverlay: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  justifyContent: "center",
-  alignItems: "center",
-  backgroundColor: "rgba(0,0,0,0.4)",
-},
-serviceTitle: {
-  fontSize: 16,
-  fontWeight: "bold",
-  color: "#fff",
-  textAlign: "center",
-  textShadowColor: "rgba(0,0,0,0.5)",
-  textShadowOffset: { width: 1, height: 1 },
-  textShadowRadius: 3,
-},
-serviceLink: {
-  fontSize: 14,
-  color: "#fff",
-  marginTop: 5,
-  textAlign: "center",
-  textShadowColor: "rgba(0,0,0,0.5)",
-  textShadowOffset: { width: 1, height: 1 },
-  textShadowRadius: 2,
-}
+  serviceTextOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  serviceTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  },
+  serviceLink: {
+    fontSize: 14,
+    color: "#fff",
+    marginTop: 5,
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
 });
 
 export default Dashboard;

@@ -1,10 +1,23 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { PageOneQuestionnaire, PageTwoQuestionnaire } from "../Components";
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from "react-native";
+import {
+  PageOneQuestionnaire,
+  PageTwoQuestionnaire,
+  PageThreeQuestionnaire,
+} from "../Components";
 import { useDispatch } from "react-redux";
 import { signUpUser } from "../Features/user/userSlice";
+import { useNavigation } from "@react-navigation/native";
 
-// Dots de pagination stylés
 const PaginationDots = ({ totalSteps, currentStep }) => {
   return (
     <View style={dotStyles.container}>
@@ -27,7 +40,8 @@ const PaginationDots = ({ totalSteps, currentStep }) => {
 
 const QuestionnaireSignUP = () => {
   const [step, setStep] = useState(1);
-  const dispatch = useDispatch(); // Pour envoyer les données au back-end
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
 
   const [formData, setFormData] = useState({
     prenom: "",
@@ -39,10 +53,21 @@ const QuestionnaireSignUP = () => {
     genre: "",
     dateNaissance: "",
     typeUtilisateur: "PRESTATAIRE",
+    photoUri: null, // Si tu utilises photo
   });
 
-  const handleSubmit = () => {
-    dispatch(signUpUser(formData));
+  const handleSubmit = async () => {
+    try {
+      // Nettoyage si besoin (supprimer confirmPassword, etc)
+      const userToSend = { ...formData, confirmPassword: null };
+      await dispatch(
+        signUpUser({ user: userToSend, imageUri: formData.photoUri })
+      ).unwrap();
+      navigation.navigate("Login");
+    } catch (error) {
+      console.error("Erreur inscription:", error);
+      alert("Erreur lors de l'inscription");
+    }
   };
 
   const renderStep = () => {
@@ -60,7 +85,16 @@ const QuestionnaireSignUP = () => {
           <PageTwoQuestionnaire
             formData={formData}
             setFormData={setFormData}
+            setStep={setStep}
+          />
+        );
+      case 3:
+        return (
+          <PageThreeQuestionnaire
+            formData={formData}
+            setFormData={setFormData}
             handleSubmit={handleSubmit}
+            navigation={navigation}
           />
         );
       default:
@@ -69,20 +103,34 @@ const QuestionnaireSignUP = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.logo}>ServiGo</Text>
-
-      <PaginationDots totalSteps={2} currentStep={step} />
-
-      <View style={styles.formContainer}>{renderStep()}</View>
-    </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <Text style={styles.logo}>ServiGo</Text>
+            <PaginationDots totalSteps={3} currentStep={step} />
+            <View style={styles.formContainer}>{renderStep()}</View>
+          </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
 export default QuestionnaireSignUP;
 
-// STYLES
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    backgroundColor: "#7C00FF",
+  },
   container: {
     flex: 1,
     backgroundColor: "#7C00FF",
@@ -104,7 +152,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// STYLES des dots
 const dotStyles = StyleSheet.create({
   container: {
     flexDirection: "row",
