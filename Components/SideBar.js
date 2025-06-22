@@ -10,7 +10,8 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchUser } from "../Features/user/userSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { fetchUser, logoutUser, resetUser } from "../Features/user/userSlice"; // ← IMPORTANT
 
 const Sidebar = ({ onClose }) => {
   const navigation = useNavigation();
@@ -48,11 +49,10 @@ const Sidebar = ({ onClose }) => {
   };
 
   const handleLogout = () => {
-    if (onClose) onClose();
+    dispatch(logoutUser());
     navigation.replace("Login");
   };
 
-  // Fonction pour récupérer les initiales
   const getInitials = () => {
     if (userInfos?.nom && userInfos?.prenom) {
       return userInfos.nom[0].toUpperCase() + userInfos.prenom[0].toUpperCase();
@@ -65,10 +65,10 @@ const Sidebar = ({ onClose }) => {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollContainer}>
-        {/* Header profil utilisateur */}
+        {/* Profil utilisateur */}
         <View style={styles.profileContainer}>
           <View style={styles.profileImage}>
-            {userInfos?.userImages ? (
+            {userInfos?.userImage ? (
               <Image
                 source={{ uri: userInfos.userImage }}
                 style={styles.profilePhoto}
@@ -88,7 +88,7 @@ const Sidebar = ({ onClose }) => {
           </Text>
         </View>
 
-        {/* Menu items */}
+        {/* Menu */}
         <View style={styles.menuContainer}>
           {menuItems.map((item) => (
             <TouchableOpacity
@@ -114,7 +114,7 @@ const Sidebar = ({ onClose }) => {
             onPress={() => handleNavigation("Settings")}
           >
             <Icon name="settings" size={24} color="#fff" style={styles.icon} />
-            <Text style={styles.menuText}>Parametre</Text>
+            <Text style={styles.menuText}>Paramètres</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -124,7 +124,7 @@ const Sidebar = ({ onClose }) => {
               color="#6200ee"
               style={styles.logoutIcon}
             />
-            <Text style={styles.logoutText}>Deconnexion</Text>
+            <Text style={styles.logoutText}>Déconnexion</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

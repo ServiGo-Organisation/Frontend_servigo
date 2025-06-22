@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import {
   AccueillePage,
   Dashboard,
@@ -11,40 +13,56 @@ import {
   QuestionnaireSignUP,
   SignUpPage,
 } from "./Pages";
+
 import "react-native-gesture-handler";
 
-// 👉 IMPORTS POUR REDUX
+// 👉 REDUX
 import { Provider } from "react-redux";
-import { store } from "./store"; // Vérifie que l'importation du store est correcte
+import { store } from "./store";
 
 const Stack = createStackNavigator();
 
 export default function App() {
+  const [initialRoute, setInitialRoute] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Simuler un chargement de 2s avant de passer à l'app principale
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
+    const checkLoginStatus = async () => {
+      try {
+        const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
+        if (isLoggedIn === "true") {
+          setInitialRoute("Dashboard");
+        } else {
+          setInitialRoute("Home");
+        }
+      } catch (err) {
+        console.error("Erreur lors de la vérification du login :", err);
+        setInitialRoute("Home");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkLoginStatus();
   }, []);
+
+  if (loading) {
+    return <LoadingPage />;
+  }
 
   return (
     <Provider store={store}>
-      <NavigationContainer style={styles.xxxx}>
-        {/* Met à jour le style de la barre d'état ici */}
+      <NavigationContainer>
         <StatusBar style="auto" />
-        {loading ? (
-          // Afficher la page de chargement pendant 2s
-          <LoadingPage />
-        ) : (
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            {/* Définir les routes pour les pages */}
-            <Stack.Screen name="Home" component={AccueillePage} />
-            <Stack.Screen name="Login" component={LoginPage} />
-            <Stack.Screen name="Register" component={QuestionnaireSignUP} />
-            <Stack.Screen name="Dashboard" component={Dashboard} />
-          </Stack.Navigator>
-        )}
+        <Stack.Navigator
+          initialRouteName={initialRoute}
+          screenOptions={{ headerShown: false }}
+        >
+          <Stack.Screen name="Home" component={AccueillePage} />
+          <Stack.Screen name="Login" component={LoginPage} />
+          <Stack.Screen name="Register" component={QuestionnaireSignUP} />
+          <Stack.Screen name="Dashboard" component={Dashboard} />
+        </Stack.Navigator>
       </NavigationContainer>
     </Provider>
   );

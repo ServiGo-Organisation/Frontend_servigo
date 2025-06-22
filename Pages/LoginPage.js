@@ -10,46 +10,9 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, setNormalLogin } from "../Features/user/userSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginPage = ({ navigation }) => {
-  //google stuff
-  const handleGoogleLogin = async () => {
-    const redirectUri = AuthSession.makeRedirectUri({
-      scheme: "yourapp", // mettre ton propre schéma dans app.json si tu veux
-    });
-
-    const authUrl = `${BACKEND_URL}/oauth2/authorization/google?redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}`;
-
-    const result = await AuthSession.startAsync({ authUrl });
-
-    if (result.type === "success") {
-      // Appel API pour récupérer token après login
-      try {
-        const response = await fetch(`${BACKEND_URL}/auth/profile`, {
-          method: "GET",
-          credentials: "include",
-        });
-
-        const token = await response.text();
-
-        if (token) {
-          // Enregistrer token localement
-          await AsyncStorage.setItem(
-            "user",
-            JSON.stringify({ accessToken: token, auth: "google" })
-          );
-          // Rediriger l'utilisateur où tu veux
-          console.log("Connexion réussie !");
-        }
-      } catch (error) {
-        console.error("Erreur récupération token :", error);
-      }
-    } else {
-      console.log("Login annulé ou échoué");
-    }
-  };
   const dispatch = useDispatch();
   const { isLoading } = useSelector((state) => state.user);
 
@@ -59,15 +22,13 @@ const LoginPage = ({ navigation }) => {
   const [error, setError] = useState("");
 
   const handleLogin = () => {
-    setError(""); // Reset error message before validation
+    setError("");
 
-    // Check if email and password are entered
     if (!email || !password) {
       setError("Veuillez remplir tous les champs.");
       return;
     }
 
-    // Add simple validation for email format
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!emailRegex.test(email)) {
       setError("L'email est invalide.");
@@ -77,8 +38,12 @@ const LoginPage = ({ navigation }) => {
     dispatch(setNormalLogin());
     dispatch(loginUser({ email, motDePasse: password }))
       .unwrap()
-      .then(() => {
-        navigation.navigate("Dashboard");
+      .then(async () => {
+        // ✅ Sauvegarde du statut de connexion
+        await AsyncStorage.setItem("isLoggedIn", "true");
+
+        // ✅ Redirection sans retour arrière
+        navigation.replace("Dashboard");
       })
       .catch((error) => {
         console.log("Erreur de connexion:", error.response?.data || error);
@@ -160,8 +125,6 @@ const LoginPage = ({ navigation }) => {
           </Text>
         </Text>
 
-        {/* Display Email and Password */}
-
         {/* Footer */}
         <Text style={styles.footer}>© ServiGo 2025</Text>
       </View>
@@ -172,11 +135,9 @@ const LoginPage = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    display: "flex",
     backgroundColor: "#5E17EB",
     alignItems: "center",
     justifyContent: "flex-end",
-    minHeight: "100vh",
   },
   whiteContainer: {
     backgroundColor: "#FFF",
@@ -259,19 +220,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
     padding: 10,
-  },
-  displayContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 10,
-    width: "100%",
-    alignItems: "center",
-  },
-  displayText: {
-    color: "#333",
-    fontSize: 14,
-    marginVertical: 5,
   },
 });
 

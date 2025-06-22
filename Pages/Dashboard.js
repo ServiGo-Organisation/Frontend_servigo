@@ -16,14 +16,21 @@ import { fetchUser } from "../Features/user/userSlice";
 import { SideBar } from "../Components";
 import { getAllServices } from "../Features/services/servicesSlice";
 import { url } from "../utils/axios";
+import { useNavigation } from "@react-navigation/native";
 
 const Dashboard = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const dispatch = useDispatch();
+  const navigation = useNavigation();
 
   const { userInfos, isLoading, isFinalUser } = useSelector(
     (state) => state.user
   );
+  useEffect(() => {
+    if (userInfos === null) {
+      navigation.replace("Login");
+    }
+  }, [userInfos]);
   const { services } = useSelector((state) => state.services);
   console.log(userInfos);
 
