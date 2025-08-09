@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   Platform,
+  ScrollView,
 } from "react-native";
 import OnboardingDots from "./OnboardingDots"; // Vérifie bien ce chemin
 

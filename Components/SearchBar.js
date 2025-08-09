@@ -25,7 +25,7 @@ const SearchBar = ({
           <Icon name="filter-variant" size={20} color="#8224E3" />
         </TouchableOpacity>
       </View>
-
+      {/*   SELECT LOCATION MAYBE AH MAYBE LA
       <TouchableOpacity style={styles.locationButton} onPress={onPressLocation}>
         <Icon name="map-marker" size={20} color="#8224E3" />
         <View style={styles.locationTextContainer}>
@@ -38,7 +38,7 @@ const SearchBar = ({
           />
         </View>
         <Icon name="chevron-down" size={20} color="#8224E3" />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };
@@ -51,6 +51,8 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
+    marginBottom: 20,
+    borderRadius: 20,
   },
   searchContainer: {
     flexDirection: "row",

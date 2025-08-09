@@ -32,16 +32,28 @@ const PageTwoQuestionnaire = ({ formData, setFormData, setStep }) => {
   };
 
   const handlePickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+    try {
+      // Demander les permissions d'abord
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Permission refusée pour accéder à la galerie');
+        return;
+      }
 
-    if (!result.canceled && result.assets.length > 0) {
-      const uri = result.assets[0].uri;
-      setFormData((prev) => ({ ...prev, photoUri: uri }));
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Utiliser MediaTypeOptions au lieu de MediaType
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const uri = result.assets[0].uri;
+        setFormData((prev) => ({ ...prev, photoUri: uri }));
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sélection d\'image:', error);
+      alert('Erreur lors de la sélection d\'image');
     }
   };
 

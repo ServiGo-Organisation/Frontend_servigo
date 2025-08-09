@@ -1,4 +1,4 @@
-package com.servigofrontend
+package com.anonymous.serviGo_frontEnd
 
 import android.os.Build
 import android.os.Bundle

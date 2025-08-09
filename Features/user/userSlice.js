@@ -78,9 +78,16 @@ export const signUpUser = createAsyncThunk(
 
       return resp.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data || "Erreur lors de l'inscription"
+      console.error(
+        "Erreur API signup:",
+        error.response?.data || error.message
       );
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Erreur lors de l'inscription";
+      return thunkAPI.rejectWithValue(errorMessage);
     }
   }
 );
@@ -94,9 +101,12 @@ export const loginUser = createAsyncThunk(
       return resp.data;
     } catch (error) {
       console.error("Erreur API login:", error.response?.data || error.message);
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Erreur login"
-      );
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Erreur de connexion";
+      return thunkAPI.rejectWithValue(errorMessage);
     }
   }
 );

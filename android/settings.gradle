@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'serviGofrontEnd'
+rootProject.name = 'serviGo_frontEnd'
 
 dependencyResolutionManagement {
   versionCatalogs {

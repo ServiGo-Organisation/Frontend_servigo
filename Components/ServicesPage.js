@@ -40,7 +40,7 @@ const services = [
     title: "Jardinier",
     image: require("../assets/images/jardinier.jpg"),
   },
-  { id: "7", title: "Vitrier", image: require("../assets/images/vitrier.jpg") },
+  { id: "7", title: "Vitrier", image: require("../assets/images/plombier.jpg") },
   {
     id: "8",
     title: "Cours particuliers",
@@ -82,7 +82,7 @@ const ServicesPage = () => {
       {/* Icône de photo de profil à droite de l'icône SG */}
       <TouchableOpacity style={styles.profileIconButton}>
         <Image
-          source={require("../assets/images/user.png")}
+          source={require("../assets/images/UserHasNoPicture.png")}
           style={styles.profileIcon}
         />
       </TouchableOpacity>

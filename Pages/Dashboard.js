@@ -1,38 +1,39 @@
-import React, { useEffect, useState } from "react";
-import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
   SafeAreaView,
   Image,
-  TextInput,
-  ScrollView,
+  TouchableOpacity,
+  Modal,
+  Text,
+  Pressable,
+  BackHandler,
+  StyleSheet,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUser } from "../Features/user/userSlice";
-import { SideBar } from "../Components";
+import { fetchUser, logoutUser } from "../Features/user/userSlice";
+import { DashboardClient, DashboardPrestataire, SideBar } from "../Components";
 import { getAllServices } from "../Features/services/servicesSlice";
-import { url } from "../utils/axios";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 
 const Dashboard = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const dispatch = useDispatch();
   const navigation = useNavigation();
 
   const { userInfos, isLoading, isFinalUser } = useSelector(
     (state) => state.user
   );
+
+  const { services } = useSelector((state) => state.services);
+
   useEffect(() => {
     if (userInfos === null) {
       navigation.replace("Login");
     }
   }, [userInfos]);
-  const { services } = useSelector((state) => state.services);
-  console.log(userInfos);
 
   useEffect(() => {
     dispatch(fetchUser());
@@ -43,19 +44,61 @@ const Dashboard = () => {
     setSidebarVisible(!sidebarVisible);
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        setShowLogoutModal(true);
+        return true;
+      };
+      BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      return () =>
+        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    }, [])
+  );
+
+  const handleLogout = () => {
+    setShowLogoutModal(false);
+    dispatch(logoutUser());
+    navigation.replace("Login");
+  };
+
   const getInitials = () => {
     if (userInfos?.nom && userInfos?.prenom) {
       return userInfos.nom[0].toUpperCase() + userInfos.prenom[0].toUpperCase();
     }
     return "U";
   };
-  console.log(
-    url +
-      "/assets/servicesImages/3f0567ef-e9b5-4e9f-8798-4018a2ccf764_plombier.jpg"
-  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* Modal déconnexion */}
+      <Modal
+        visible={showLogoutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLogoutModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Déconnexion</Text>
+            <Text style={styles.modalMessage}>
+              Souhaitez-vous vraiment vous déconnecter ?
+            </Text>
+            <View style={styles.modalButtonsRow}>
+              <Pressable style={styles.logoutButton} onPress={handleLogout}>
+                <Text style={styles.logoutButtonText}>Déconnexion</Text>
+              </Pressable>
+              <Pressable
+                style={styles.cancelButton}
+                onPress={() => setShowLogoutModal(false)}
+              >
+                <Text style={styles.cancelButtonText}>Annuler</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -85,98 +128,39 @@ const Dashboard = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Sidebar */}
+        {/* Sidebar avec overlay */}
         {sidebarVisible && (
           <View style={styles.sidebarWrapper}>
-            <View style={styles.sidebarContainer}>
-              <SideBar onClose={() => setSidebarVisible(false)} />
-              <TouchableOpacity
-                style={styles.overlay}
-                onPress={() => setSidebarVisible(false)}
-              />
-            </View>
+            <TouchableOpacity
+              style={styles.sidebarOverlay}
+              onPress={() => setSidebarVisible(false)}
+            >
+              <View style={styles.sidebarContainer}>
+                <SideBar onClose={() => setSidebarVisible(false)} />
+              </View>
+            </TouchableOpacity>
           </View>
         )}
 
-        {/* Contenu */}
-        <ScrollView style={styles.content}>
-          <View style={styles.welcomeSection}>
-            {isLoading ? (
-              <Text style={styles.text}>Chargement...</Text>
-            ) : (
-              <>
-                <Text style={styles.greeting}>
-                  Bonjour {userInfos?.genre === "Male" ? "Mr" : "Mme"}
-                </Text>
-                <Text style={styles.userName}>
-                  {userInfos?.nom && userInfos?.prenom
-                    ? `${userInfos.nom} ${userInfos.prenom}`
-                    : "Utilisateur"}
-                </Text>
-                <Text style={styles.subtitle}>
-                  Besoin de services chez vous sans sortir ?
-                </Text>
-                {isFinalUser && (
-                  <Text style={styles.userRole}>Utilisateur final</Text>
-                )}
-              </>
-            )}
-          </View>
-
-          {/* Barre de recherche */}
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Rechercher un service..."
-              placeholderTextColor="#999"
-            />
-            <View style={styles.searchIconContainer}>
-              <Ionicons name="search" size={24} style={styles.searchIcon} />
-            </View>
-          </View>
-
-          {/* Section dynamique des services */}
-          <Text style={styles.sectionTitle}>Nos Services</Text>
-          <View style={styles.servicesGrid}>
-            {services.length > 0 ? (
-              services.map((service) => (
-                <TouchableOpacity key={service.id} style={styles.serviceCard}>
-                  <Image
-                    source={{
-                      uri: `${url}/assets/servicesImages/${service.serviceImage}`,
-                    }}
-                    style={styles.serviceImage}
-                  />
-                  <LinearGradient
-                    colors={["transparent", "rgba(0,0,0,0.8)"]}
-                    style={styles.serviceTextOverlay}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 0, y: 1 }}
-                  >
-                    <Text style={styles.serviceTitle}>{service.nom}</Text>
-                    <Text style={styles.serviceLink}>Voir plus →</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <Text>Aucun service disponible.</Text>
-            )}
-          </View>
-        </ScrollView>
+        {userInfos?.typeUtilisateur === "PRESTATAIRE" ? (
+          <DashboardPrestataire />
+        ) : (
+          <DashboardClient
+            userInfos={userInfos}
+            isLoading={isLoading}
+            isFinalUser={isFinalUser}
+            services={services}
+            navigation={navigation}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#f5f5f5",
-  },
-  container: {
-    flex: 1,
-    position: "relative",
-  },
+  safeArea: { flex: 1, backgroundColor: "#f5f5f5" },
+  container: { flex: 1, position: "relative" },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -188,14 +172,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
-  menuButton: {},
-  rightIconButton: {},
-  profileIconButton: {},
-  rightIcon: {
-    width: 40,
-    height: 40,
-    resizeMode: "contain",
-  },
+  rightIcon: { width: 40, height: 40, resizeMode: "contain" },
   profileIcon: {
     width: 40,
     height: 40,
@@ -206,11 +183,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
   },
-  profilePhoto: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 20,
-  },
+  profilePhoto: { width: "100%", height: "100%", borderRadius: 20 },
   profileInitialBackground: {
     backgroundColor: "#8a47fa",
     width: "100%",
@@ -218,132 +191,74 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  profileInitial: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
+  profileInitial: { color: "#fff", fontSize: 20, fontWeight: "bold" },
   sidebarWrapper: {
     position: "absolute",
     width: "100%",
     height: "100%",
     zIndex: 100,
   },
-  sidebarContainer: {
+  sidebarOverlay: {
     flexDirection: "row",
     width: "100%",
     height: "100%",
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 15,
-  },
-  welcomeSection: {
-    marginBottom: 20,
-    paddingTop: 10,
-  },
-  greeting: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  userName: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#6200ea",
-    marginTop: 5,
-  },
-  userRole: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 2,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#444",
-    marginTop: 10,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    alignItems: "center",
-    marginBottom: 25,
-    height: 50,
-    elevation: 2,
-  },
-  searchInput: {
-    flex: 1,
-    height: "100%",
-    color: "#333",
-  },
-  searchIconContainer: {
-    backgroundColor: "#6200ea",
-    borderRadius: 5,
-    padding: 8,
-  },
-  searchIcon: {
-    color: "white",
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 15,
-    marginTop: 10,
-  },
-  servicesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  serviceCard: {
-    width: "48%",
-    backgroundColor: "#fff",
-    marginBottom: 15,
-    borderRadius: 10,
-    overflow: "hidden",
-    elevation: 3,
-    position: "relative",
-  },
-  serviceImage: {
-    width: "100%",
-    height: 120,
-  },
-  serviceTextOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.4)",
   },
-  serviceTitle: {
-    fontSize: 16,
+  sidebarContainer: { width: "70%", height: "100%", backgroundColor: "#fff" },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    width: "80%",
+    alignItems: "center",
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#fff",
-    textAlign: "center",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
+    color: "#222",
+    marginBottom: 10,
   },
-  serviceLink: {
-    fontSize: 14,
-    color: "#fff",
-    marginTop: 5,
+  modalMessage: {
+    fontSize: 16,
+    color: "#444",
+    marginBottom: 24,
     textAlign: "center",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
   },
+  modalButtonsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  logoutButton: {
+    flex: 1,
+    backgroundColor: "#5E17EB",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginRight: 8,
+  },
+  logoutButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#5E17EB",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginLeft: 8,
+  },
+  cancelButtonText: { color: "#5E17EB", fontWeight: "bold", fontSize: 16 },
+  menuButton: {},
+  rightIconButton: {},
+  profileIconButton: {},
 });
 
 export default Dashboard;

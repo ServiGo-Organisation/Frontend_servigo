@@ -1,4 +1,4 @@
-package com.servigofrontend
+package com.anonymous.serviGo_frontEnd
 
 import android.app.Application
 import android.content.res.Configuration

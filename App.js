@@ -12,6 +12,9 @@ import {
   LoginPage,
   QuestionnaireSignUP,
   SignUpPage,
+  MapsPage,
+  MapsPageSimple,
+  MapsPageReal,
 } from "./Pages";
 
 import "react-native-gesture-handler";
@@ -62,6 +65,7 @@ export default function App() {
           <Stack.Screen name="Login" component={LoginPage} />
           <Stack.Screen name="Register" component={QuestionnaireSignUP} />
           <Stack.Screen name="Dashboard" component={Dashboard} />
+          <Stack.Screen name="Maps" component={MapsPageReal} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>
