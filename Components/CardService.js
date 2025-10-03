@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   LayoutAnimation,
   Platform,
   UIManager,
@@ -72,67 +71,57 @@ const CardService = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {services.map((service) => {
-          const isExpanded = expandedCardId === service.id;
-          return (
-            <TouchableOpacity
-              key={service.id}
-              style={styles.cardContainer}
-              activeOpacity={0.95}
-              onPress={() => toggleExpand(service.id)}
+    <View style={styles.listContainer}>
+      {services.map((service) => {
+        const isExpanded = expandedCardId === service.id;
+        return (
+          <TouchableOpacity
+            key={service.id}
+            style={styles.cardContainer}
+            activeOpacity={0.95}
+            onPress={() => toggleExpand(service.id)}
+          >
+            <LinearGradient
+              colors={service.gradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.card, isExpanded && { paddingBottom: 24 }]}
             >
-              <LinearGradient
-                colors={service.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={[
-                  styles.card,
-                  isExpanded && { paddingBottom: 24 }, // more space if expanded
-                ]}
-              >
-                <View style={styles.cardHeader}>
-                  <View style={styles.iconContainer}>
-                    <Ionicons name={service.icon} size={20} color="#8B5CF6" />
-                  </View>
-                  <View style={styles.cardContent}>
-                    <Text style={styles.cardTitle}>{service.title}</Text>
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>
-                        {isExpanded ? "Voir moins" : "Voir plus"}
-                      </Text>
-                    </View>
+              <View style={styles.cardHeader}>
+                <View style={styles.iconContainer}>
+                  <Ionicons name={service.icon} size={20} color="#8B5CF6" />
+                </View>
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>{service.title}</Text>
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {isExpanded ? "Voir moins" : "Voir plus"}
+                    </Text>
                   </View>
                 </View>
+              </View>
 
-                <Text style={styles.cardSubtitle}>{service.subtitle}</Text>
+              <Text style={styles.cardSubtitle}>{service.subtitle}</Text>
 
-                {isExpanded && (
-                  <Text style={styles.descriptionExpanded}>
-                    {service.description}
-                  </Text>
-                )}
+              {isExpanded && (
+                <Text style={styles.descriptionExpanded}>
+                  {service.description}
+                </Text>
+              )}
 
-                <TouchableOpacity style={styles.cardBtn}>
-                  <Text style={styles.cardBtnText}>On y va ?</Text>
-                </TouchableOpacity>
-              </LinearGradient>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+              <TouchableOpacity style={styles.cardBtn}>
+                <Text style={styles.cardBtnText}>On y va ?</Text>
+              </TouchableOpacity>
+            </LinearGradient>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F5F5",
-  },
-  scrollContent: {
-    paddingBottom: 100,
+  listContainer: {
     paddingHorizontal: 20,
   },
   cardContainer: {

@@ -21,3 +21,4 @@ export { default as FormAddService } from "./FormAddService";
 export { default as DashboardPrestataire } from "./DashboardPrestataire";
 export { default as GreetingText } from "./GreetingText";
 export { default as FooterNav } from "./FooterNav";
+export { default as ButtonAddServicePrestataire } from "./ButtonAddServicePrestataire";

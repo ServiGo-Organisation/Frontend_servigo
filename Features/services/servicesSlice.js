@@ -8,44 +8,73 @@ const initialState = {
   isLoading: false,
   error: null,
 };
+// ===>ICI L'AJOUT AVEC L'IMAGE
 
 // === Thunk pour ajouter un service ===
+// export const addService = createAsyncThunk(
+//   "services/addService",
+//   async ({ service, imageUri }, thunkAPI) => {
+//     try {
+//       const formData = new FormData();
+//       const accessToken = storedUser?.accessToken;
+
+//       formData.append("service", JSON.stringify(service));
+
+//       if (imageUri) {
+//         const filename = imageUri.split("/").pop();
+//         const match = /\.(\w+)$/.exec(filename);
+//         const type = match ? `image/${match[1]}` : `image`;
+
+//         formData.append("serviceImage", {
+//           uri: imageUri,
+//           name: filename,
+//           type,
+//         });
+//       }
+
+//       const response = await customFetch.post(
+//         "/api/v1/services/addService",
+//         formData,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${accessToken}`, // Utilisation de l'Access Token pour l'authentification
+//           },
+//           withCredentials: true, // Inclure les cookies si nécessaire
+//         }
+//       );
+
+//       return response.data;
+//     } catch (error) {
+//       return thunkAPI.rejectWithValue(
+//         error.response?.data || "Erreur lors de l'ajout du service"
+//       );
+//     }
+//   }
+// );
+
 export const addService = createAsyncThunk(
   "services/addService",
-  async ({ service, imageUri }, thunkAPI) => {
+  async (service, thunkAPI) => {
     try {
-      const formData = new FormData();
+      const storedUser = await getUserFromStorage();
       const accessToken = storedUser?.accessToken;
-
-      formData.append("service", JSON.stringify(service));
-
-      if (imageUri) {
-        const filename = imageUri.split("/").pop();
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image`;
-
-        formData.append("serviceImage", {
-          uri: imageUri,
-          name: filename,
-          type,
-        });
-      }
 
       const response = await customFetch.post(
         "/api/v1/services/addService",
-        formData,
+        service, // JSON direct, comme dans Postman
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`, // Utilisation de l'Access Token pour l'authentification
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
           },
-          withCredentials: true, // Inclure les cookies si nécessaire
         }
       );
 
       return response.data;
     } catch (error) {
+      console.log("Erreur backend :", error?.response?.data || error.message);
       return thunkAPI.rejectWithValue(
-        error.response?.data || "Erreur lors de l'ajout du service"
+        error?.response?.data || "Erreur lors de l'ajout du service"
       );
     }
   }

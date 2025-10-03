@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -11,13 +11,8 @@ import {
   LoadingPage,
   LoginPage,
   QuestionnaireSignUP,
-  SignUpPage,
-  MapsPage,
-  MapsPageSimple,
   MapsPageReal,
 } from "./Pages";
-
-import "react-native-gesture-handler";
 
 // 👉 REDUX
 import { Provider } from "react-redux";
@@ -32,8 +27,11 @@ export default function App() {
   useEffect(() => {
     const checkLoginStatus = async () => {
       try {
-        const isLoggedIn = await AsyncStorage.getItem("isLoggedIn");
-        if (isLoggedIn === "true") {
+        // 🔑 On vérifie si un utilisateur est stocké
+        const userData = await AsyncStorage.getItem("user");
+        const user = userData ? JSON.parse(userData) : null;
+
+        if (user?.accessToken) {
           setInitialRoute("Dashboard");
         } else {
           setInitialRoute("Home");
